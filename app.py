@@ -197,11 +197,15 @@ ICON_ACTIVITY = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" str
 ICON_HISTORY = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>'
 
 # ==============================================================================
-# CUSTOM CSS - VIBRANT MESH + DOT-GRID CANVAS, LAYERED SHADOWS & INTERACTIVITY
+# CUSTOM CSS - VIBRANT MESH + DOT-GRID CANVAS, LAYERED SHADOWS & MOBILE LIGHT LOCK
 # ==============================================================================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root, .stApp {
+    color-scheme: light !important;
+}
 
 html, body, [class*="css"] {
     font-family: 'Plus Jakarta Sans', sans-serif;
@@ -225,8 +229,31 @@ html, body, [class*="css"] {
     background: transparent !important;
 }
 
-.stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, label {
-    color: #0F172A;
+/* PERJELAS TOMBOL NAVIGASI SIDEBAR (>>) DI POJOK KIRI ATAS HP */
+[data-testid="stSidebarCollapsedControl"] button,
+button[kind="header"],
+[data-testid="collapsedControl"] button {
+    background-color: #FFFFFF !important;
+    color: #1E1B4B !important;
+    border: 1.5px solid #A5B4FC !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.22) !important;
+    opacity: 1 !important;
+}
+
+[data-testid="stSidebarCollapsedControl"] svg,
+button[kind="header"] svg,
+[data-testid="collapsedControl"] svg {
+    fill: #1E1B4B !important;
+    color: #1E1B4B !important;
+    stroke: #1E1B4B !important;
+}
+
+/* PAKSA SEMUA JUDUL, SUBHEADER & LABEL TETAP GELAP DI DARK MODE HP */
+.stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5,
+[data-testid="stHeadingWithActionElements"] *,
+label, label p {
+    color: #0F172A !important;
 }
 
 [data-testid="stCaptionContainer"] p {
@@ -264,7 +291,7 @@ html, body, [class*="css"] {
     padding-top: 1.2rem !important;
 }
 
-/* SINGLE-BORDER INPUTS WITH INDIGO-CORAL INTERACTIVE FOCUS RING */
+/* SINGLE-BORDER INPUTS WITH INDIGO-CORAL INTERACTIVE FOCUS RING & MOBILE HIGH CONTRAST */
 [data-baseweb="input"],
 [data-baseweb="base-input"] {
     background-color: #F8FAFC !important;
@@ -300,12 +327,32 @@ div[data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within {
 
 div[data-testid="stTextInput"] input,
 div[data-testid="stNumberInput"] input {
-    background-color: transparent !important;
+    background-color: #F8FAFC !important;
+    -webkit-text-fill-color: #0F172A !important;
+    color: #0F172A !important;
+    caret-color: #4F46E5 !important;
     border: none !important;
     box-shadow: none !important;
-    color: #0F172A !important;
     font-weight: 600 !important;
     padding-left: 14px !important;
+}
+
+div[data-testid="stTextInput"] input::placeholder,
+div[data-testid="stNumberInput"] input::placeholder {
+    -webkit-text-fill-color: #64748B !important;
+    color: #64748B !important;
+    opacity: 1 !important;
+}
+
+div[data-testid="stTextInput"] button svg {
+    fill: #475569 !important;
+    color: #475569 !important;
+}
+
+div[data-testid="stSelectbox"] div[data-baseweb="select"] span,
+div[data-testid="stSelectbox"] div[data-baseweb="select"] div {
+    color: #0F172A !important;
+    -webkit-text-fill-color: #0F172A !important;
 }
 
 div[data-testid="stNumberInput"] button {
