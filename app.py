@@ -654,7 +654,7 @@ def show_login_page():
                 f'<div style="display: flex; justify-content: center; margin-bottom: 14px;">{BRAND_LOGO_SVG}</div>'
                 f'<div style="font-weight: 800; margin: 0; font-size: 1.65rem; letter-spacing: -0.3px; text-shadow: 0 2px 8px rgba(0,0,0,0.2);">CARDIOSCREEN AI</div>'
                 f'<div style="font-size: 0.9rem; margin: 6px 0 14px 0; font-weight: 500; opacity: 0.95;">Sistem Skrining Dini Risiko Penyakit Jantung</div>'
-                f'<span style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); font-size: 0.75rem; font-weight: 700; padding: 5px 14px; border-radius: 20px; display: inline-block;">UPT Puskesmas Bandung • Kab. Serang</span>'
+                f'<span style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); font-size: 0.75rem; font-weight: 700; padding: 5px 14px; border-radius: 20px; display: inline-block;">UPT Puskesmas Bandung</span>'
                 f'</div>'
                 f'{ECG_DIVIDER_SVG}'
             )
@@ -762,7 +762,7 @@ def show_dashboard_page():
             st.caption("Setiap hasil skrining otomatis tersimpan permanen ke Cloud Database dan dapat diunduh sebagai PDF maupun rekap Excel.")
 
 # ==============================================================================
-# 3. HALAMAN FORM INPUT DATA (LOGIKA ML 100% SAMA + SIMPAN KE CLOUD DB)
+# 3. HALAMAN FORM INPUT DATA (LOGIKA ML 100% VOTING STANDAR + SIMPAN CLOUD DB)
 # ==============================================================================
 def show_input_page():
     input_banner_html = (
@@ -844,7 +844,7 @@ def show_input_page():
             if not no_rm.strip() or not nama_pasien.strip():
                 st.warning("Mohon lengkapi **No. Rekam Medis** dan **Nama Lengkap Pasien** terlebih dahulu.", icon=":material/warning:")
             else:
-                # --- LOGIKA MACHINE LEARNING TIDAK DIUBAH SAMA SEKALI ---
+                # --- LOGIKA MACHINE LEARNING MURNI SESUAI DATASET & SKRIPSI ---
                 try:
                     jk_encoded = le_jk.transform([jenis_kelamin])[0]
                     rokok_encoded = le_rokok.transform([status_merokok])[0]
@@ -861,18 +861,9 @@ def show_input_page():
                 classes = model_rf.classes_
                 probabilities = {cls: round(prob, 4) for cls, prob in zip(classes, pred_probs)}
 
-                # --- PENYESUAIAN AMBANG BATAS / THRESHOLD TUNING ---
-                prob_rendah = probabilities.get('Risiko Rendah', 0.0)
-                prob_sedang = probabilities.get('Risiko Sedang', 0.0)
-                prob_tinggi = probabilities.get('Risiko Tinggi', 0.0)
-
-                if prob_rendah > 0.35:
-                    pred_class = 'Risiko Rendah'
-                elif prob_tinggi >= 0.30 or prob_tinggi > prob_sedang:
-                    pred_class = 'Risiko Tinggi'
-                else:
-                    pred_class = 'Risiko Sedang'
-                # -------------------------------------------------------
+                # Keputusan final menggunakan voting standar Random Forest (probabilitas tertinggi)
+                pred_class = max(probabilities, key=probabilities.get)
+                # --------------------------------------------------------------
 
                 fi_values = model_rf.feature_importances_
                 feature_names = ['Usia', 'Jenis Kelamin', 'Sistole', 'Diastole', 'Gula Darah', 'Kolesterol', 'IMT', 'Status Merokok']
