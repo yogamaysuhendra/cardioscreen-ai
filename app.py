@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import joblib
 import io
-from datetime import datetime
+from datetime import datetime, timedelta
 from fpdf import FPDF
 from supabase import create_client, Client
 
@@ -872,7 +872,8 @@ def show_input_page():
                     'Tingkat Kepentingan': fi_values
                 }).sort_values(by='Tingkat Kepentingan', ascending=True)
 
-                waktu_periksa = datetime.now().strftime("%d-%m-%Y %H:%M")
+                waktu_wib = datetime.utcnow() + timedelta(hours=7)
+                waktu_periksa = waktu_wib.strftime("%d-%m-%Y %H:%M")
                 keyakinan_str = f"{probabilities.get(pred_class, 0)*100:.1f}%"
 
                 # Simpan permanen ke Supabase Cloud Database
