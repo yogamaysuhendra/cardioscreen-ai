@@ -4,7 +4,7 @@ import numpy as np
 import joblib
 import io
 from datetime import datetime, timedelta
-from fpdf import FPDF
+from fpdf import FPDF, XPos, YPos
 from supabase import create_client, Client
 
 # ==============================================================================
@@ -104,11 +104,11 @@ def generate_pdf_bytes(hasil):
     # Header Kop Puskesmas
     pdf.set_font("Helvetica", "B", 14)
     pdf.set_text_color(67, 56, 202)
-    pdf.cell(0, 8, "UPT PUSKESMAS BANDUNG - KABUPATEN SERANG", ln=True, align="C")
+    pdf.cell(0, 8, "UPT PUSKESMAS BANDUNG - KABUPATEN SERANG", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
     
     pdf.set_font("Helvetica", "B", 11)
     pdf.set_text_color(15, 23, 42)
-    pdf.cell(0, 6, "LAPORAN HASIL SKRINING AWAL RISIKO PENYAKIT JANTUNG (CARDIOSCREEN AI)", ln=True, align="C")
+    pdf.cell(0, 6, "LAPORAN HASIL SKRINING AWAL RISIKO PENYAKIT JANTUNG (CARDIOSCREEN AI)", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
     
     pdf.set_draw_color(99, 102, 241)
     pdf.set_line_width(0.6)
@@ -118,7 +118,7 @@ def generate_pdf_bytes(hasil):
     # Identitas Pasien
     pdf.set_font("Helvetica", "B", 10)
     pdf.set_fill_color(238, 242, 255)
-    pdf.cell(0, 8, "  A. IDENTITAS PASIEN", ln=True, fill=True)
+    pdf.cell(0, 8, "  A. IDENTITAS PASIEN", new_x=XPos.LMARGIN, new_y=YPos.NEXT, fill=True)
     pdf.ln(2)
 
     pdf.set_font("Helvetica", "", 10)
@@ -131,13 +131,13 @@ def generate_pdf_bytes(hasil):
         pdf.cell(55, 7, label, border=0)
         pdf.cell(5, 7, ":", border=0)
         pdf.set_font("Helvetica", "B", 10)
-        pdf.cell(0, 7, str(val), ln=True)
+        pdf.cell(0, 7, str(val), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.set_font("Helvetica", "", 10)
     pdf.ln(4)
 
     # Parameter Klinis
     pdf.set_font("Helvetica", "B", 10)
-    pdf.cell(0, 8, "  B. PARAMETER INDIKATOR KLINIS", ln=True, fill=True)
+    pdf.cell(0, 8, "  B. PARAMETER INDIKATOR KLINIS", new_x=XPos.LMARGIN, new_y=YPos.NEXT, fill=True)
     pdf.ln(2)
 
     pdf.set_font("Helvetica", "", 10)
@@ -145,12 +145,12 @@ def generate_pdf_bytes(hasil):
         clean_val = str(val).replace("²", "2")
         pdf.cell(55, 7, param, border=0)
         pdf.cell(5, 7, ":", border=0)
-        pdf.cell(0, 7, clean_val, ln=True)
+        pdf.cell(0, 7, clean_val, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.ln(4)
 
     # Hasil Analisis AI
     pdf.set_font("Helvetica", "B", 10)
-    pdf.cell(0, 8, "  C. HASIL KLASIFIKASI ALGORITMA RANDOM FOREST", ln=True, fill=True)
+    pdf.cell(0, 8, "  C. HASIL KLASIFIKASI ALGORITMA RANDOM FOREST", new_x=XPos.LMARGIN, new_y=YPos.NEXT, fill=True)
     pdf.ln(3)
 
     kelas = hasil['kelas_final']
@@ -164,20 +164,69 @@ def generate_pdf_bytes(hasil):
     else:
         pdf.set_text_color(5, 150, 105)
 
-    pdf.cell(0, 9, f"Kategori Risiko: {kelas.upper()} (Keyakinan Model: {persen:.2f}%)", ln=True)
+    pdf.cell(0, 9, f"Kategori Risiko: {kelas.upper()} (Keyakinan Model: {persen:.2f}%)", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.set_text_color(15, 23, 42)
     pdf.ln(2)
 
     pdf.set_font("Helvetica", "B", 10)
-    pdf.cell(0, 7, "Rincian Probabilitas Semua Kelas:", ln=True)
+    pdf.cell(0, 7, "Rincian Probabilitas Semua Kelas:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.set_font("Helvetica", "", 10)
     for cls_name, prob_val in hasil['probabilities'].items():
-        pdf.cell(0, 6, f"- {cls_name}: {prob_val*100:.2f}%", ln=True)
+        pdf.cell(0, 6, f"- {cls_name}: {prob_val*100:.2f}%", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+    # Panduan Penjelasan ke Pasien / Lansia (Sesuai Menu Hasil Klasifikasi)
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.set_fill_color(238, 242, 255)
+    pdf.cell(0, 8, "  D. PANDUAN PENJELASAN KE PASIEN / LANSIA", new_x=XPos.LMARGIN, new_y=YPos.NEXT, fill=True)
+    pdf.ln(3)
+
+    nama_pasien = hasil['nama_pasien']
+    if kelas == "Risiko Tinggi":
+        arti_hasil = (
+            f"Arti Hasil: Kondisi jantung Bapak/Ibu {nama_pasien} berada pada kategori perlu perhatian serius. "
+            "Terdapat kombinasi faktor klinis yang berisiko memicu gangguan jantung."
+        )
+        tindak_lanjut = [
+            "Segera jadwalkan pemeriksaan dokter atau rujukan EKG.",
+            "Batasi garam (< 1 sendok teh/hari), gorengan, dan santan.",
+            "Hindari aktivitas fisik berat secara mendadak."
+        ]
+    elif kelas == "Risiko Sedang":
+        arti_hasil = (
+            f"Arti Hasil: Kondisi Bapak/Ibu {nama_pasien} tergolong waspada (risiko menengah). "
+            "Jika pola hidup tidak diperbaiki, tingkat risiko dapat meningkat."
+        )
+        tindak_lanjut = [
+            "Kontrol rutin tekanan darah, gula darah, dan kolesterol tiap bulan.",
+            "Perbanyak sayur, buah, serta kurangi rokok dan lemak.",
+            "Jalan santai rutin 30 menit, 3-5 kali seminggu."
+        ]
+    else:
+        arti_hasil = (
+            f"Arti Hasil: Indikator kesehatan Bapak/Ibu {nama_pasien} saat ini tergolong aman (risiko rendah). "
+            "Tetap pertahankan pola hidup sehat agar risiko tidak meningkat."
+        )
+        tindak_lanjut = [
+            "Pertahankan berat badan ideal dan hindari paparan asap rokok.",
+            "Terapkan pola makan gizi seimbang.",
+            "Lakukan skrining ulang berkala setiap 6 bulan."
+        ]
+
+    pdf.set_font("Helvetica", "", 10)
+    pdf.multi_cell(pdf.epw, 6, arti_hasil, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.ln(2)
+
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.cell(0, 6, "Tindak Lanjut & Edukasi Kesehatan:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_font("Helvetica", "", 10)
+    for item in tindak_lanjut:
+        pdf.multi_cell(pdf.epw, 6, f"- {item}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     pdf.ln(6)
     pdf.set_font("Helvetica", "I", 9)
     pdf.set_text_color(100, 116, 139)
-    pdf.multi_cell(0, 5, "Catatan Medis: Dokumen ini merupakan hasil skrining awal berbasis kecerdasan buatan (CARDIOSCREEN AI) dan digunakan sebagai alat bantu pendukung keputusan klinis. Diagnosis akhir tetap memerlukan pemeriksaan langsung oleh dokter.")
+    pdf.multi_cell(pdf.epw, 5, "Catatan Medis: Dokumen ini merupakan hasil skrining awal berbasis kecerdasan buatan (CARDIOSCREEN AI) dan digunakan sebagai alat bantu pendukung keputusan klinis. Diagnosis akhir tetap memerlukan pemeriksaan langsung oleh dokter.", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     return bytes(pdf.output())
 
